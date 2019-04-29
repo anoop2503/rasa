@@ -27,6 +27,8 @@ class SlackBot(SlackClient, OutputChannel):
     async def send_text_message(self, recipient_id, message):
         recipient = self.slack_channel or recipient_id
         for message_part in message.split("\n\n"):
+            if not (self.slack_channel[0] == "D"):
+                message_part = "<@" + str(recipient_id) + "> " + message_part
             super(SlackBot, self).api_call(
                 "chat.postMessage", channel=recipient, as_user=True, text=message_part
             )
@@ -254,6 +256,8 @@ class SlackInput(InputChannel):
                     )
             elif request.json:
                 output = request.json
+                if (output and 'event' in output and output['event']['channel']):
+                    self.slack_channel = output['event']['channel']
                 if "challenge" in output:
                     return response.json(output.get("challenge"))
 
