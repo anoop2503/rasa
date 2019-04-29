@@ -207,7 +207,7 @@ class SlackInput(InputChannel):
 
         return text.rstrip().lstrip()  # drop extra spaces at beginning and end
 
-    async def process_message(self, request: Request, on_new_message, text, sender_id):
+    def process_message(self, request: Request, on_new_message, text, sender_id):
         """Slack retries to post messages up to 3 times based on
         failure conditions defined here:
         https://api.slack.com/events-api#failure_conditions
@@ -228,7 +228,7 @@ class SlackInput(InputChannel):
                 text, out_channel, sender_id, input_channel=self.name()
             )
 
-            await on_new_message(user_msg)
+            on_new_message(user_msg)
         except Exception as e:
             logger.error("Exception when trying to handle message.{0}".format(e))
             logger.error(str(e), exc_info=True)
@@ -243,12 +243,12 @@ class SlackInput(InputChannel):
             return response.json({"status": "ok"})
 
         @slack_webhook.route("/webhook", methods=["GET", "POST"])
-        async def webhook(request: Request):
+        def webhook(request: Request):
             if request.form:
                 output = dict(request.form)
                 if self._is_button_reply(output):
                     sender_id = json.loads(output["payload"])["user"]["id"]
-                    return await self.process_message(
+                    return self.process_message(
                         request,
                         on_new_message,
                         text=self._get_button_reply(output),
@@ -262,7 +262,7 @@ class SlackInput(InputChannel):
                     return response.json(output.get("challenge"))
 
                 elif self._is_user_message(output):
-                    return await self.process_message(
+                    return self.process_message(
                         request,
                         on_new_message,
                         text=self._sanitize_user_message(
