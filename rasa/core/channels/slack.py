@@ -207,7 +207,7 @@ class SlackInput(InputChannel):
 
         return text.rstrip().lstrip()  # drop extra spaces at beginning and end
 
-    def process_message(self, request: Request, on_new_message, text, sender_id):
+    async def process_message(self, request: Request, on_new_message, text, sender_id):
         """Slack retries to post messages up to 3 times based on
         failure conditions defined here:
         https://api.slack.com/events-api#failure_conditions
@@ -228,7 +228,7 @@ class SlackInput(InputChannel):
                 text, out_channel, sender_id, input_channel=self.name()
             )
 
-            on_new_message(user_msg)
+            await on_new_message(user_msg)
         except Exception as e:
             logger.error("Exception when trying to handle message.{0}".format(e))
             logger.error(str(e), exc_info=True)
